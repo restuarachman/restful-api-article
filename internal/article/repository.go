@@ -6,5 +6,5 @@ import (
 
 type ArticleRepository interface {
 	Store(entity.Article) error
-	Get() ([]entity.Article, error)
+	Get(string, int, int, int) ([]entity.Article, error)
 }

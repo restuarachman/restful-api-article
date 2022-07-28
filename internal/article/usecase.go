@@ -6,5 +6,5 @@ import (
 
 type ArticleUsecase interface {
 	Store(dto.ArticleRequest) error
-	GetArticles() ([]dto.ArticleResponse, error)
+	GetArticles(string, string, int, int) ([]dto.ArticleResponse, error)
 }

@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"log"
 	"tech-test/internal/article"
 	"tech-test/internal/article/entity"
 )
@@ -26,10 +25,19 @@ func (ar *ArticleRepositoryImpl) Store(article entity.Article) error {
 
 }
 
-func (ar *ArticleRepositoryImpl) Get() ([]entity.Article, error) {
-	results, err := ar.db.Query("SELECT * FROM articles")
-	if err != nil {
-		return []entity.Article{}, err
+func (ar *ArticleRepositoryImpl) Get(query string, authorId, offset, limit int) ([]entity.Article, error) {
+	var results *sql.Rows
+	var err error
+	if authorId != 0 {
+		results, err = ar.db.Query("SELECT * FROM articles AS a WHERE (a.body LIKE ? OR a.title LIKE ?) AND author_id = ? ORDER BY created_at DESC LIMIT ?, ?", "%"+query+"%", "%"+query+"%", authorId, offset, limit)
+		if err != nil {
+			return []entity.Article{}, err
+		}
+	} else {
+		results, err = ar.db.Query("SELECT * FROM articles AS a WHERE a.body LIKE ? OR a.title LIKE ? ORDER BY created_at DESC LIMIT ?, ?", "%"+query+"%", "%"+query+"%", offset, limit)
+		if err != nil {
+			return []entity.Article{}, err
+		}
 	}
 
 	articles := []entity.Article{}
@@ -40,7 +48,6 @@ func (ar *ArticleRepositoryImpl) Get() ([]entity.Article, error) {
 			return []entity.Article{}, err
 		}
 		articles = append(articles, articleRes)
-		log.Println(articleRes)
 	}
 
 	return articles, nil

@@ -7,6 +7,8 @@ import (
 	_articleRepo "tech-test/internal/article/repository"
 	_articleUsecase "tech-test/internal/article/usecase"
 
+	_authorRepo "tech-test/internal/author/repository"
+
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/labstack/echo/v4"
 )
@@ -26,8 +28,12 @@ func main() {
 
 	e := echo.New()
 
+	authorRepo := _authorRepo.NewAuthorRepository(db)
 	articleRepo := _articleRepo.NewArticleRepo(db)
-	articleUsecase := _articleUsecase.NewArticleUsecase(articleRepo)
+
+	articleUsecase := _articleUsecase.NewArticleUsecase(articleRepo, authorRepo)
+
 	_articleHttp.NewArticleHandler(e, articleUsecase)
+
 	e.Logger.Fatal(e.Start(":8000"))
 }

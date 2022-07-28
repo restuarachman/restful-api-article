@@ -5,15 +5,18 @@ import (
 	"tech-test/internal/article"
 	"tech-test/internal/article/dto"
 	"tech-test/internal/article/entity"
+	"tech-test/internal/author"
+	entityAuthor "tech-test/internal/author/entity"
 	"time"
 )
 
 type ArticleUsecaseImpl struct {
-	ar article.ArticleRepository
+	ar         article.ArticleRepository
+	authorRepo author.AuthorRepository
 }
 
-func NewArticleUsecase(ar article.ArticleRepository) article.ArticleUsecase {
-	return &ArticleUsecaseImpl{ar}
+func NewArticleUsecase(ar article.ArticleRepository, authorRepo author.AuthorRepository) article.ArticleUsecase {
+	return &ArticleUsecaseImpl{ar, authorRepo}
 }
 
 func (au *ArticleUsecaseImpl) Store(article dto.ArticleRequest) error {
@@ -33,8 +36,21 @@ func (au *ArticleUsecaseImpl) Store(article dto.ArticleRequest) error {
 	return nil
 }
 
-func (au *ArticleUsecaseImpl) GetArticles() ([]dto.ArticleResponse, error) {
-	articles, err := au.ar.Get()
+func (au *ArticleUsecaseImpl) GetArticles(query, author string, offset, limit int) ([]dto.ArticleResponse, error) {
+	var authorEntity entityAuthor.Author
+	var err error
+
+	if author != "" {
+		authorEntity, err = au.authorRepo.Get(author)
+		if err != nil {
+			return []dto.ArticleResponse{}, err
+		}
+		if authorEntity.ID == 0 {
+			return []dto.ArticleResponse{}, errors.New("author not found")
+		}
+	}
+
+	articles, err := au.ar.Get(query, int(authorEntity.ID), offset, limit)
 	if err != nil {
 		return []dto.ArticleResponse{}, err
 	}
